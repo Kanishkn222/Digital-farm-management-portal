@@ -26,10 +26,12 @@ def init_db():
     # 1. Connect to MySQL without specifying database to create it if it doesn't exist
     try:
         conn = pymysql.connect(
-            host=app.config['DB_HOST'],
-            user=app.config['DB_USER'],
-            password=app.config['DB_PASSWORD']
-        )
+    host=app.config['DB_HOST'],
+    user=app.config['DB_USER'],
+    password=app.config['DB_PASSWORD'],
+    port=int(app.config['DB_PORT']),
+    ssl={"ssl": {}}
+)
         with conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {app.config['DB_NAME']}")
         conn.close()
