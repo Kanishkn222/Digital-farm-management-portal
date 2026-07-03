@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Digital Farm Portal{% endblock %} - AgriTech Management</title>
+    
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Core UI Custom Premium Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('dashboard') }}" class="brand">
+                    <i class="fa-solid fa-tractor"></i>
+                    <span>AgriFarm Portal</span>
+                </a>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="{% if active_page == 'dashboard' %}active{% endif %}">
+                    <a href="{{ url_for('dashboard') }}">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'farms' %}active{% endif %}">
+                    <a href="{{ url_for('farms') }}">
+                        <i class="fa-solid fa-house-chimney-window"></i>
+                        <span>Farm Registration</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'livestock' %}active{% endif %}">
+                    <a href="{{ url_for('livestock') }}">
+                        <i class="fa-solid fa-cow"></i>
+                        <span>Pigs & Poultry</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'biosecurity' %}active{% endif %}">
+                    <a href="{{ url_for('biosecurity') }}">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Biosecurity Checklist</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'vaccination' %}active{% endif %}">
+                    <a href="{{ url_for('vaccination') }}">
+                        <i class="fa-solid fa-syringe"></i>
+                        <span>Vaccination Control</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'diseases' %}active{% endif %}">
+                    <a href="{{ url_for('diseases') }}">
+                        <i class="fa-solid fa-virus-slash"></i>
+                        <span>Disease Reports</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'visitors' %}active{% endif %}">
+                    <a href="{{ url_for('visitors') }}">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                        <span>Visitor Registry</span>
+                    </a>
+                </li>
+                <li class="{% if active_page == 'reports' %}active{% endif %}">
+                    <a href="{{ url_for('reports') }}">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>Analytical Reports</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        A
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">{{ session.get('username', 'Admin') }}</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn" title="Sign Out">
+                    <i class="fa-solid fa-power-off"></i>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Application Area -->
+        <main class="main-content">
+            
+            <!-- Top Header Navbar -->
+            <header class="top-header">
+                <div class="page-title-area">
+                    <button class="menu-toggle">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                
+                <div class="header-right">
+                    <div class="date-display">
+                        <i class="fa-solid fa-calendar-day"></i>
+                        <span id="header-date">July 2, 2026</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content Wrapper -->
+            <div class="content-wrapper">
+                
+                <!-- Flash Messages Banner Notification -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert-banner alert-banner-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'info' }}">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                                <button class="alert-banner-close"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+            
+        </main>
+        
+    </div>
+    
+    <!-- Script Logic files -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Set dynamic date in header
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', dateOptions);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

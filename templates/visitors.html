@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Visitor Management Registry{% endblock %}
+{% block page_title %}Visitor Registry{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Log new arrival -->
+    <div class="section-card" style="align-self: flex-start;">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-square-plus"></i> Register Guest Access</h2>
+        </div>
+        
+        <form action="{{ url_for('visitors') }}" method="POST">
+            <div class="form-group">
+                <label for="visit_farm">Access Point (Farm) *</label>
+                <select id="visit_farm" name="farm_id" class="form-control" required style="background: var(--bg-primary);">
+                    {% for farm in farms %}
+                    <option value="{{ farm.id }}">{{ farm.name }}</option>
+                    {% else %}
+                    <option value="">No farms available. Register a farm first.</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="guest_name">Visitor Full Name *</label>
+                <input type="text" id="guest_name" name="visitor_name" class="form-control" placeholder="e.g. Sandra Jenkins" required>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="organization">Company / Organization</label>
+                    <input type="text" id="organization" name="organization" class="form-control" placeholder="e.g. Government Agency, Veterinary Inc.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact_num">Contact Phone *</label>
+                    <input type="text" id="contact_num" name="contact_number" class="form-control" placeholder="e.g. +1 555-0391" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="purpose">Purpose of Visit *</label>
+                <input type="text" id="purpose" name="visit_purpose" class="form-control" placeholder="e.g. Feed Delivery, Routine Veterinary Inspection" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="entry_time">Entry Date & Time *</label>
+                <input type="datetime-local" id="entry_time" name="entry_time" class="form-control" required>
+            </div>
+            
+            <!-- Biosecurity declaration checklist style -->
+            <div class="checklist-container" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+                <div class="checklist-item" style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--accent-emerald);">
+                    <input type="checkbox" id="declaration" name="signed_biosecurity_declaration" value="1" required>
+                    <label for="declaration" class="checklist-label" style="align-items: flex-start;">
+                        <span class="checkbox-custom" style="margin-top: 2px; flex-shrink: 0;"></span>
+                        <span style="font-size: 0.8rem; line-height: 1.4;">
+                            <strong>Visitor Biosecurity Declaration *</strong><br>
+                            I verify that I have not visited another swine/poultry farm facility in the past 72 hours, and agree to follow all farm boot sterilization and decontamination guidelines.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-id-card-clip"></i> Register Access
+            </button>
+        </form>
+    </div>
+    
+    <!-- Visitors log list -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-book-open-reader"></i> Access Records (Logs)</h2>
+        </div>
+        
+        <div class="filters-bar">
+            <div class="search-input-wrapper" style="max-width: 100%;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="form-control table-search" data-target="visitor-table" placeholder="Search visitors, purpose, company...">
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table" id="visitor-table">
+                <thead>
+                    <tr>
+                        <th>Visitor Details</th>
+                        <th>Purpose / Farm</th>
+                        <th>Logged In</th>
+                        <th>Logged Out</th>
+                        <th style="text-align: right;">Depart</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visitor in visitors %}
+                    <tr>
+                        <td>
+                            <strong>{{ visitor.visitor_name }}</strong>
+                            {% if visitor.signed_biosecurity_declaration %}
+                                <span style="color: var(--color-success); font-size: 0.8rem; margin-left: 0.25rem;" title="Signed Bio-Declaration"><i class="fa-solid fa-circle-check"></i></span>
+                            {% endif %}
+                            <br>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                {{ visitor.organization or 'Independent' }} | Tel: {{ visitor.contact_number }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ visitor.farm_name }}</strong>
+                            <br>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ visitor.visit_purpose }}</span>
+                        </td>
+                        <td style="font-size: 0.78rem;">{{ visitor.entry_time }}</td>
+                        <td style="font-size: 0.78rem;">
+                            {% if visitor.exit_time %}
+                                {{ visitor.exit_time }}
+                            {% else %}
+                                <span class="badge badge-warning">On-site</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            {% if not visitor.exit_time %}
+                            <form action="{{ url_for('depart_visitor', id=visitor.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.5rem;" title="Log Departure">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Out
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-circle-minus"></i></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No visitor entries registered for today.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pre-populate input with current local timezone formatted string (YYYY-MM-DDTHH:MM)
+    const localDateTime = new Date();
+    localDateTime.setMinutes(localDateTime.getMinutes() - localDateTime.getTimezoneOffset());
+    document.getElementById('entry_time').value = localDateTime.toISOString().slice(0, 16);
+</script>
+{% endblock %}

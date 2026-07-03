@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Incident Reports{% endblock %}
+{% block page_title %}Disease Monitoring & Outbreak Control{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Log new case form -->
+    <div class="section-card" style="align-self: flex-start;">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-virus-slash"></i> Log Disease Incident</h2>
+        </div>
+        
+        <form action="{{ url_for('diseases') }}" method="POST">
+            <div class="form-group">
+                <label for="incident_farm">Select Farm *</label>
+                <select id="incident_farm" name="farm_id" class="form-control" required style="background: var(--bg-primary);">
+                    {% for farm in farms %}
+                    <option value="{{ farm.id }}">{{ farm.name }}</option>
+                    {% else %}
+                    <option value="">No farms available. Register a farm first.</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="incident_cohort">Associated Livestock Batch (Optional)</label>
+                <select id="incident_cohort" name="livestock_id" class="form-control" style="background: var(--bg-primary);">
+                    <option value="">-- No specific batch / general pen --</option>
+                    {% for batch in cohorts %}
+                    <option value="{{ batch.id }}">
+                        Batch #{{ batch.id }} ({{ batch.farm_name }} - {{ batch.type }} / {{ batch.breed }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="disease_name">Disease / Symptom Name *</label>
+                <input type="text" id="disease_name" name="disease_name" class="form-control" placeholder="e.g. Swine Dysentery, Avian Influenza symptoms" required>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="cases_count">Estimated Cases Count *</label>
+                    <input type="number" min="1" id="cases_count" name="cases_count" class="form-control" placeholder="e.g. 5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="report_date">Observation Date *</label>
+                    <input type="date" id="report_date" name="report_date" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="incident_status">Incident Action Status</label>
+                <select id="incident_status" name="status" class="form-control" style="background: var(--bg-primary);">
+                    <option value="Reported">Reported (Pending Review)</option>
+                    <option value="Under Investigation">Under Investigation</option>
+                    <option value="Quarantined">Quarantined / Isolated</option>
+                    <option value="Resolved">Resolved / Cleared</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="symptoms">Clinical Symptoms Observed</label>
+                <textarea id="symptoms" name="symptoms" class="form-control" placeholder="Provide description of animal behavior, physiological symptoms, and mortalities..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center; color: white;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Log Incident Case
+            </button>
+        </form>
+    </div>
+    
+    <!-- Incident logs list -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-folder-open"></i> Active Incident Records</h2>
+        </div>
+        
+        <div class="filters-bar">
+            <div class="search-input-wrapper" style="max-width: 100%;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="form-control table-search" data-target="disease-table" placeholder="Search disease logs...">
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table" id="disease-table">
+                <thead>
+                    <tr>
+                        <th>Disease</th>
+                        <th>Farm Info</th>
+                        <th>Cases</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr title="Symptoms: {{ case.symptoms or 'No notes.' }}">
+                        <td>
+                            <strong>{{ case.disease_name }}</strong>
+                        </td>
+                        <td>
+                            {{ case.farm_name }}
+                            {% if case.livestock_id %}
+                                <br><span style="font-size: 0.75rem; color: var(--text-muted);">Batch #{{ case.livestock_id }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ case.cases_count }}</strong></td>
+                        <td>
+                            {% if case.status == 'Resolved' %}
+                                <span class="badge badge-success">Resolved</span>
+                            {% elif case.status == 'Under Investigation' %}
+                                <span class="badge badge-info">Investigating</span>
+                            {% elif case.status == 'Quarantined' %}
+                                <span class="badge badge-danger">Quarantined</span>
+                            {% else %}
+                                <span class="badge badge-warning">Reported</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.8rem;">{{ case.report_date }}</td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-secondary btn-sm" onclick="openUpdateDiseaseModal({{ case.id }}, '{{ case.status }}')" style="padding: 0.35rem 0.5rem;" title="Update Status">
+                                <i class="fa-solid fa-pen-nib"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No disease incidents reported. Safety compliance is excellent.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Update Disease Status -->
+<div id="updateDiseaseModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-weight: 600;"><i class="fa-solid fa-pen-nib" style="color: var(--accent-emerald); margin-right: 0.5rem;"></i> Update Case Status</h3>
+            <button class="modal-close" onclick="closeModal('updateDiseaseModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form action="{{ url_for('update_disease') }}" method="POST">
+            <input type="hidden" id="update_case_id" name="id">
+            
+            <div class="form-group">
+                <label for="update_case_status">Incident Status</label>
+                <select id="update_case_status" name="status" class="form-control" style="background: var(--bg-primary);">
+                    <option value="Reported">Reported (Pending Review)</option>
+                    <option value="Under Investigation">Under Investigation</option>
+                    <option value="Quarantined">Quarantined / Isolated</option>
+                    <option value="Resolved">Resolved / Cleared</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('updateDiseaseModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('report_date').value = new Date().toISOString().split('T')[0];
+    
+    function openUpdateDiseaseModal(caseId, status) {
+        document.getElementById('update_case_id').value = caseId;
+        document.getElementById('update_case_status').value = status;
+        openModal('updateDiseaseModal');
+    }
+</script>
+{% endblock %}

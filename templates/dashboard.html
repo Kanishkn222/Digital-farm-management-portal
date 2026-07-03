@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Stat Cards Grid -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Registered Farms</h3>
+            <div class="stat-number">{{ stats.total_farms }}</div>
+        </div>
+        <div class="stat-icon emerald">
+            <i class="fa-solid fa-house-chimney"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Pigs Managed</h3>
+            <div class="stat-number">{{ stats.total_pigs }}</div>
+        </div>
+        <div class="stat-icon info">
+            <i class="fa-solid fa-piggy-bank"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Poultry Flock</h3>
+            <div class="stat-number">{{ stats.total_poultry }}</div>
+        </div>
+        <div class="stat-icon warning">
+            <i class="fa-solid fa-feather"></i>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Avg Biosecurity</h3>
+            <div class="stat-number">
+                {% if stats.avg_biosecurity %}
+                {{ stats.avg_biosecurity|round|int }}%
+                {% else %}
+                N/A
+                {% endif %}
+            </div>
+        </div>
+        <div
+            class="stat-icon {% if stats.avg_biosecurity and stats.avg_biosecurity >= 80 %}emerald{% else %}warning{% endif %}">
+            <i class="fa-solid fa-shield-virus"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Grid (Chart & Recent activity) -->
+<div class="dashboard-grid">
+    <!-- Chart Section -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Livestock Distribution by Farm</h2>
+            <a href="{{ url_for('reports') }}" class="btn btn-secondary btn-sm"><i
+                    class="fa-solid fa-arrow-trend-up"></i> Details</a>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="populationChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Actions & General Status -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-bolt"></i> Quick Operations</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <a href="{{ url_for('farms') }}" class="btn btn-primary" style="justify-content: center; width: 100%;">
+                <i class="fa-solid fa-plus"></i> Register New Farm
+            </a>
+            <a href="{{ url_for('biosecurity') }}" class="btn btn-secondary"
+                style="justify-content: center; width: 100%;">
+                <i class="fa-solid fa-clipboard-check"></i> File Biosecurity Log
+            </a>
+            <a href="{{ url_for('visitors') }}" class="btn btn-secondary" style="justify-content: center; width: 100%;">
+                <i class="fa-solid fa-id-card"></i> Register Guest Visitor
+            </a>
+            <a href="{{ url_for('diseases') }}" class="btn btn-danger"
+                style="justify-content: center; width: 100%; color: white;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Log Disease Incident
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom grid for logs -->
+<div class="dashboard-grid">
+    <!-- Recent Biosecurity checks -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-shield-check"></i> Recent Biosecurity Audits</h2>
+            <a href="{{ url_for('biosecurity') }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Farm</th>
+                        <th>Inspector</th>
+                        <th>Audit Date</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_biosecurity %}
+                    <tr>
+                        <td><strong>{{ log.farm_name }}</strong></td>
+                        <td>{{ log.inspector_name }}</td>
+                        <td>{{ log.log_date }}</td>
+                        <td>
+                            <span class="badge badge-success">
+                                {{ log.score }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted);">No biosecurity audits
+                            filed yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Active Visitors -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-users"></i> Active Visitors</h2>
+            <a href="{{ url_for('visitors') }}" class="btn btn-secondary btn-sm">Registry</a>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Visitor</th>
+                        <th>Purpose</th>
+                        <th>Entry Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visitor in active_visitors %}
+                    <tr>
+                        <td><strong>{{ visitor.visitor_name }}</strong><br><span
+                                style="font-size: 0.75rem; color: var(--text-muted);">{{ visitor.organization or
+                                'Independent' }}</span></td>
+                        <td>{{ visitor.visit_purpose }}</td>
+                        <td style="font-size: 0.8rem;">{{ visitor.entry_time }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No active visitors
+                            currently on site.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

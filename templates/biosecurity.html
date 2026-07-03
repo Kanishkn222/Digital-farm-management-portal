@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Biosecurity Checklist{% endblock %}
+{% block page_title %}Biosecurity Audits & Safety Control{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Audit entry form -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-shield-halved"></i> Run Biosecurity Audit</h2>
+        </div>
+        
+        <form action="{{ url_for('biosecurity') }}" method="POST">
+            <div class="form-group">
+                <label for="audit_farm">Farm Location *</label>
+                <select id="audit_farm" name="farm_id" class="form-control" required style="background: var(--bg-primary);">
+                    {% for farm in farms %}
+                    <option value="{{ farm.id }}">{{ farm.name }}</option>
+                    {% else %}
+                    <option value="">No farms available. Register a farm first.</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="inspector">Inspector Name *</label>
+                    <input type="text" id="inspector" name="inspector_name" class="form-control" placeholder="e.g. Inspector Davis" required>
+                </div>
+                <div class="form-group">
+                    <label for="audit_date">Audit Date *</label>
+                    <input type="date" id="audit_date" name="log_date" class="form-control" required>
+                </div>
+            </div>
+            
+            <!-- Interactive checklist items -->
+            <div class="form-group" style="margin-top: 1rem;">
+                <label style="margin-bottom: 0.75rem; font-weight: 600;">Checklist Safeguards Compliance</label>
+                <div class="checklist-container">
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item1" name="chk_disinfection">
+                        <label for="item1" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Vehicle and boot disinfection baths active at entry</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item2" name="chk_clothing">
+                        <label for="item2" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Protective clothing, boots, and hairnets worn by all staff</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item3" name="chk_feed">
+                        <label for="item3" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Feed storage silos/bins secured against rodents and wild birds</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item4" name="chk_mortality">
+                        <label for="item4" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Sanitary and isolated mortality disposal zone operational</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item5" name="chk_water">
+                        <label for="item5" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Water sanitization and filtration systems functioning</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item6" name="chk_quarantine">
+                        <label for="item6" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Quarantine pens isolated from general populations</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item7" name="chk_separation">
+                        <label for="item7" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Complete separation maintained between pigs and poultry species</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item8" name="chk_ventilation">
+                        <label for="item8" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Ventilation air-filters clean and dust fans clear of build-up</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item9" name="chk_visitors">
+                        <label for="item9" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Guest registry validated and biosecurity disclosures signed</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" id="item10" name="chk_sterilization">
+                        <label for="item10" class="checklist-label">
+                            <span class="checkbox-custom"></span>
+                            <span>Equipment sterilized prior to transfers between separate pens</span>
+                        </label>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- Score display -->
+            <div class="score-display-box">
+                <div class="score-number" id="biosecurity-score">0%</div>
+                <div class="score-label">Calculated Safety Compliance Score</div>
+                <input type="hidden" id="biosecurity-score-input" name="score" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Audit Observations / Notes</label>
+                <textarea id="notes" name="notes" class="form-control" placeholder="Describe any non-compliance elements..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-circle-check"></i> File Audit Report
+            </button>
+        </form>
+    </div>
+    
+    <!-- Audit history log list -->
+    <div class="section-card" style="align-self: flex-start;">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Audit History Logs</h2>
+        </div>
+        
+        <div class="filters-bar">
+            <div class="search-input-wrapper" style="max-width: 100%;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="form-control table-search" data-target="biosecurity-table" placeholder="Search audits...">
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table" id="biosecurity-table">
+                <thead>
+                    <tr>
+                        <th>Farm Location</th>
+                        <th>Inspector</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in audits %}
+                    <tr title="Notes: {{ audit.notes or 'No notes provided.' }}">
+                        <td>
+                            <strong>{{ audit.farm_name }}</strong>
+                        </td>
+                        <td>{{ audit.inspector_name }}</td>
+                        <td>
+                            <span class="badge {% if audit.score >= 80 %}badge-success{% elif audit.score >= 50 %}badge-warning{% else %}badge-danger{% endif %}">
+                                {{ audit.score }}%
+                            </span>
+                        </td>
+                        <td style="font-size: 0.8rem;">{{ audit.log_date }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No historical records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pre-populate date picker with today's date
+    document.getElementById('audit_date').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

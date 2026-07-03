@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Analytical Reports{% endblock %}
+{% block page_title %}Reports & System Analytics{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+    <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Export / Print Report</button>
+</div>
+
+<!-- Aggregated Totals row -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Total Livestock Headcount</h3>
+            <div class="stat-number">{{ total_headcount }}</div>
+        </div>
+        <div class="stat-icon emerald">
+            <i class="fa-solid fa-calculator"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Registered Visitors</h3>
+            <div class="stat-number">{{ total_visitors }}</div>
+        </div>
+        <div class="stat-icon info">
+            <i class="fa-solid fa-users"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Active Bio-Audits</h3>
+            <div class="stat-number">{{ total_audits }}</div>
+        </div>
+        <div class="stat-icon warning">
+            <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Disease Reports Case Load</h3>
+            <div class="stat-number">{{ total_incidents }}</div>
+        </div>
+        <div class="stat-icon danger">
+            <i class="fa-solid fa-shield-virus"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Grid containing advanced charts -->
+<div class="dashboard-grid">
+    <!-- Health distribution doughnut chart -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-heart-pulse"></i> Herd & Flock Health Distribution</h2>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="healthStatusChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Disease incident trend over months -->
+    <div class="section-card">
+        <div class="card-header-flex">
+            <h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Monthly Disease Incidents</h2>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="diseaseIncidentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced detailed summary breakdown -->
+<div class="section-card" style="margin-bottom: 2rem;">
+    <div class="card-header-flex">
+        <h2 class="card-title"><i class="fa-solid fa-server"></i> Dynamic Livestock Breakdown per Farm</h2>
+    </div>
+    
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Farm Name</th>
+                    <th>Location</th>
+                    <th>Pigs Count</th>
+                    <th>Poultry Count</th>
+                    <th>Vaccinations Completed</th>
+                    <th>Pending Schedules</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for farm in breakdown %}
+                <tr>
+                    <td><strong>{{ farm.name }}</strong></td>
+                    <td>{{ farm.location }}</td>
+                    <td><strong style="color: #3b82f6;">{{ farm.pigs }}</strong></td>
+                    <td><strong style="color: #10b981;">{{ farm.poultry }}</strong></td>
+                    <td>
+                        <span class="badge badge-success">{{ farm.vaccines_done }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-warning">{{ farm.vaccines_pending }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No analytical summaries generated yet. Add cohorts to view breakdowns.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Printable Styles Override -->
+<style>
+@media print {
+    .sidebar, .top-header, .btn, .filters-bar, form {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .content-wrapper {
+        padding: 0 !important;
+    }
+    
+    .section-card {
+        border: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+    }
+    
+    body {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    .data-table th, .data-table td {
+        border-color: #ccc !important;
+        color: black !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

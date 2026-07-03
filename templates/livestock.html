@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Pig & Poultry Management{% endblock %}
+{% block page_title %}Livestock Inventory{% endblock %}
+
+{% block content %}
+<!-- Inventory Cards Summary -->
+<div class="stat-grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Pig Count</h3>
+            <div class="stat-number" style="color: #3b82f6;">{{ pig_count }}</div>
+        </div>
+        <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+            <i class="fa-solid fa-piggy-bank"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Poultry Count</h3>
+            <div class="stat-number" style="color: #10b981;">{{ poultry_count }}</div>
+        </div>
+        <div class="stat-icon emerald">
+            <i class="fa-solid fa-feather"></i>
+        </div>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="card-header-flex">
+        <h2 class="card-title"><i class="fa-solid fa-cow"></i> Active Livestock Batches</h2>
+        <button class="btn btn-primary" onclick="openModal('addLivestockModal')">
+            <i class="fa-solid fa-plus"></i> Add Livestock Batch
+        </button>
+    </div>
+    
+    <!-- Filtering & Searching -->
+    <div class="filters-bar">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="form-control table-search" data-target="livestock-table" placeholder="Search cohorts, breeds, health...">
+        </div>
+    </div>
+    
+    <!-- Table display -->
+    <div class="table-container">
+        <table class="data-table" id="livestock-table">
+            <thead>
+                <tr>
+                    <th>Batch ID</th>
+                    <th>Farm</th>
+                    <th>Livestock Type</th>
+                    <th>Breed</th>
+                    <th>Quantity (Head)</th>
+                    <th>Estimated Birth Date</th>
+                    <th>Health Status</th>
+                    <th>Last Updated</th>
+                    <th style="text-align: right;">Operations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in inventory %}
+                <tr>
+                    <td>#{{ batch.id }}</td>
+                    <td><strong>{{ batch.farm_name }}</strong></td>
+                    <td>
+                        {% if batch.type == 'Pig' %}
+                            <span style="color: #3b82f6;"><i class="fa-solid fa-piggy-bank" style="margin-right: 0.5rem;"></i>Pig</span>
+                        {% else %}
+                            <span style="color: #10b981;"><i class="fa-solid fa-feather" style="margin-right: 0.5rem;"></i>Poultry</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ batch.breed }}</td>
+                    <td><strong>{{ batch.quantity }}</strong></td>
+                    <td>{{ batch.birth_date or 'N/A' }}</td>
+                    <td>
+                        {% if batch.health_status == 'Healthy' %}
+                            <span class="badge badge-success">Healthy</span>
+                        {% elif batch.health_status == 'Sick' %}
+                            <span class="badge badge-warning">Sick</span>
+                        {% elif batch.health_status == 'Quarantined' %}
+                            <span class="badge badge-danger">Quarantined</span>
+                        {% else %}
+                            <span class="badge badge-info">Treatment</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 0.8rem;">{{ batch.status_last_updated }}</td>
+                    <td style="text-align: right; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <!-- Update status button -->
+                        <button class="btn btn-secondary btn-sm" onclick="openUpdateStatusModal({{ batch.id }}, '{{ batch.health_status }}', {{ batch.quantity }})">
+                            <i class="fa-solid fa-pen-to-square"></i> Update
+                        </button>
+                        
+                        <form action="{{ url_for('delete_livestock', id=batch.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this livestock batch?');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.35rem 0.6rem;">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No livestock batches registered. Click 'Add Livestock Batch' to initialize.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Add Livestock Batch -->
+<div id="addLivestockModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-weight: 600;"><i class="fa-solid fa-plus-minus" style="color: var(--accent-emerald); margin-right: 0.5rem;"></i> Register Livestock Batch</h3>
+            <button class="modal-close" onclick="closeModal('addLivestockModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form action="{{ url_for('livestock') }}" method="POST">
+            <div class="form-group">
+                <label for="livestock_farm">Select Farm Location *</label>
+                <select id="livestock_farm" name="farm_id" class="form-control" required style="background: var(--bg-primary);">
+                    {% for farm in farms %}
+                    <option value="{{ farm.id }}">{{ farm.name }} ({{ farm.location }})</option>
+                    {% else %}
+                    <option value="">No farms available. Please register a farm first.</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="livestock_type">Livestock Type *</label>
+                    <select id="livestock_type" name="type" class="form-control" required style="background: var(--bg-primary);">
+                        <option value="Pig">Pig</option>
+                        <option value="Poultry">Poultry</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="livestock_breed">Breed / Genetic Line *</label>
+                    <input type="text" id="livestock_breed" name="breed" class="form-control" placeholder="e.g. Landrace, Cobb 500" required>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="livestock_quantity">Initial Quantity (Head) *</label>
+                    <input type="number" min="1" id="livestock_quantity" name="quantity" class="form-control" placeholder="e.g. 50" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="livestock_dob">Estimated Hatch / Birth Date</label>
+                    <input type="date" id="livestock_dob" name="birth_date" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="livestock_health">Initial Health Status *</label>
+                <select id="livestock_health" name="health_status" class="form-control" style="background: var(--bg-primary);">
+                    <option value="Healthy">Healthy</option>
+                    <option value="Sick">Sick</option>
+                    <option value="Quarantined">Quarantined</option>
+                    <option value="Treatment">Under Treatment</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addLivestockModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Batch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Update Status -->
+<div id="updateStatusModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-weight: 600;"><i class="fa-solid fa-pen" style="color: var(--accent-emerald); margin-right: 0.5rem;"></i> Update Livestock Batch</h3>
+            <button class="modal-close" onclick="closeModal('updateStatusModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="updateStatusForm" action="{{ url_for('update_livestock') }}" method="POST">
+            <input type="hidden" id="update_batch_id" name="id">
+            
+            <div class="form-group">
+                <label for="update_quantity">Quantity (Current stock counts)</label>
+                <input type="number" min="0" id="update_quantity" name="quantity" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="update_health">Health Status</label>
+                <select id="update_health" name="health_status" class="form-control" style="background: var(--bg-primary);">
+                    <option value="Healthy">Healthy</option>
+                    <option value="Sick">Sick</option>
+                    <option value="Quarantined">Quarantined</option>
+                    <option value="Treatment">Under Treatment</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('updateStatusModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openUpdateStatusModal(batchId, healthStatus, quantity) {
+    document.getElementById('update_batch_id').value = batchId;
+    document.getElementById('update_health').value = healthStatus;
+    document.getElementById('update_quantity').value = quantity;
+    openModal('updateStatusModal');
+}
+</script>
+{% endblock %}
