@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS farms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     location VARCHAR(255) NOT NULL,
-    size_hectares DECIMAL(10, 2) NOT NULL,
+    size_hectares DECIMAL(10,2) NOT NULL,
     contact_phone VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
