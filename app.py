@@ -113,7 +113,7 @@ def login():
                 admin = cursor.fetchone()
             conn.close()
             
-            if admin and check_password_hash(admin['password_hash'], password):
+            if admin and admin['password_hash'] == password:
                 session['logged_in'] = True
                 session['username'] = admin['username']
                 session['admin_id'] = admin['id']
